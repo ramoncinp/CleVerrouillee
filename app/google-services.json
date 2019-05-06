@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "764375642735",
+    "firebase_url": "https://cleverrouillee-77cba.firebaseio.com",
+    "project_id": "cleverrouillee-77cba",
+    "storage_bucket": "cleverrouillee-77cba.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:764375642735:android:9b66ea4bb02485d9",
+        "android_client_info": {
+          "package_name": "com.ceti.clverrouille"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "764375642735-8ivu63comf5jcoage73c22uejpe4u0cl.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.ceti.clverrouille",
+            "certificate_hash": "6c1981cbd6f3ed8a3d91bad607c6e220dbc89842"
+          }
+        },
+        {
+          "client_id": "764375642735-3c5hm9oishuboj5n9eiqlr39hnp4j7h2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCrBNbrGazyD_UWN-h9evTlvl5jMzdg2Oc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "764375642735-3c5hm9oishuboj5n9eiqlr39hnp4j7h2.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
