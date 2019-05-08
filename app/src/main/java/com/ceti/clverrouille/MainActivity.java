@@ -48,6 +48,6 @@ public class MainActivity extends AppCompatActivity
         TextView emailTv = findViewById(R.id.correo);
 
         nombreTv.setText(dataSnapshot.child("nombre").getValue(String.class));
-        emailTv.setText(dataSnapshot.child("contraseña").getValue(String.class));
+        emailTv.setText(dataSnapshot.child("email").getValue(String.class));
     }
 }
