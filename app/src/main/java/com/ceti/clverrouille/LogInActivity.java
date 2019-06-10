@@ -1,13 +1,13 @@
 package com.ceti.clverrouille;
 
-import android.app.AlertDialog;
-import android.content.DialogInterface;
+import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -55,6 +55,17 @@ public class LogInActivity extends AppCompatActivity
                     alertDialog.show("Cargando...");
                     getUser(username.getText().toString(), pass.getText().toString());
                 }
+            }
+        });
+
+        TextView addUserButton = findViewById(R.id.add_user_button);
+        addUserButton.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                Intent intent = new Intent(LogInActivity.this, AddUser.class);
+                startActivity(intent);
             }
         });
 
@@ -110,7 +121,8 @@ public class LogInActivity extends AppCompatActivity
                 Log.d(TAG, "Usuario encontrado -> " + dataSnapshot.toString());
                 if (dataSnapshot.getValue() == null)
                 {
-                    showResultInDialog("El usuario no existe");
+                    Constantes.showResultInDialog("Iniciar sesión", "El usuario no existe",
+                            LogInActivity.this);
                 }
                 else
                 {
@@ -125,11 +137,13 @@ public class LogInActivity extends AppCompatActivity
                     String gottenPass = pass.getText().toString();
                     if (mUser.getPass().equals(gottenPass))
                     {
-                        showResultInDialog("Autenticao'");
+                        Constantes.showResultInDialog("Iniciar sesión", "Autenticao'",
+                                LogInActivity.this);
                     }
                     else
                     {
-                        showResultInDialog("Error de autenticacion");
+                        Constantes.showResultInDialog("Iniciar sesión", "Error de autenticacion",
+                                LogInActivity.this);
                     }
                 }
             }
@@ -140,23 +154,5 @@ public class LogInActivity extends AppCompatActivity
                 Log.d(TAG, "Ocurrió un error, intenté de nuevo");
             }
         });
-    }
-
-    void showResultInDialog(String message)
-    {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Iniciar sesión");
-        builder.setMessage(message);
-        builder.setPositiveButton("Regresar", new DialogInterface.OnClickListener()
-        {
-            @Override
-            public void onClick(DialogInterface dialog, int which)
-            {
-                dialog.dismiss();
-            }
-        });
-
-        AlertDialog dialog = builder.create();
-        dialog.show();
     }
 }

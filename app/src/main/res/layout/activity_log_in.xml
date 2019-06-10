@@ -50,7 +50,9 @@
                 android:layout_height="wrap_content"
                 android:hint="Usuario"
                 android:inputType="textEmailAddress"
-                android:textSize="16sp" />
+                android:textSize="16sp"
+                app:met_floatingLabel="normal"
+                app:met_floatingLabelText="Usuario"/>
 
         </android.support.v7.widget.CardView>
 
@@ -70,7 +72,9 @@
                 android:layout_height="wrap_content"
                 android:hint="Contraseña"
                 android:inputType="textPassword"
-                android:textSize="16sp" />
+                android:textSize="16sp"
+                app:met_floatingLabel="normal"
+                app:met_floatingLabelText="Contraseña"/>
 
         </android.support.v7.widget.CardView>
 
@@ -89,7 +93,7 @@
     </LinearLayout>
 
     <TextView
-        android:id="@+id/textView"
+        android:id="@+id/add_user_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
