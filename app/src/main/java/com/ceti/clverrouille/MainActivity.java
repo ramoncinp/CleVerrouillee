@@ -10,22 +10,32 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 
 public class MainActivity extends AppCompatActivity
 {
     private static final int LOG_IN_REQUEST_CODE = 0;
+    private static final String TAG = MainActivity.class.getSimpleName();
+
+    //Variables
+    private String userId;
+
+    //Objetos
+    private FirebaseDatabase root;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        setTitle("Clé Verrouillée");
 
         //Evaluar si la sesión esta iniciada
         if (!isLogedIn())
@@ -35,6 +45,7 @@ public class MainActivity extends AppCompatActivity
         }
         else
         {
+            getUserId();
             initDatabase();
         }
     }
@@ -55,6 +66,13 @@ public class MainActivity extends AppCompatActivity
             //Eliminar de shared preferences
             logOut();
         }
+        else if (id == R.id.config_device)
+        {
+            //Iniciar actividad para escanear dispositivos
+            Intent intent = new Intent(this, ConfigureDevice.class);
+            startActivity(intent);
+        }
+
         return super.onOptionsItemSelected(item);
     }
 
@@ -69,10 +87,24 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    private void getUserId()
+    {
+        SharedPreferences sp = getSharedPreferences(Constantes.SHARED_PREFERENCES_NAME,
+                MODE_PRIVATE);
+        userId = sp.getString(Constantes.USER_ID, "");
+    }
+
     private void initDatabase()
     {
-        DatabaseReference sensors = FirebaseDatabase.getInstance().getReference().child("usuarios");
-        sensors.addValueEventListener(new ValueEventListener()
+        //Obtener base de datos
+        root = FirebaseDatabase.getInstance();
+
+        //Obtener referencia de usuario
+        DatabaseReference users = root.getReference("usuarios");
+
+        //Ejecutar query para obtener usuario
+        Query getUser = users.orderByKey().equalTo(userId);
+        getUser.addListenerForSingleValueEvent(new ValueEventListener()
         {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot)
@@ -83,7 +115,7 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError)
             {
-                Log.d("Datos", "Error al obtener datos", databaseError.toException());
+                Toast.makeText(MainActivity.this, "Error al obtener usuario", Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -91,10 +123,27 @@ public class MainActivity extends AppCompatActivity
     private void parseData(DataSnapshot dataSnapshot)
     {
         TextView nombreTv = findViewById(R.id.nombre);
-        TextView emailTv = findViewById(R.id.correo);
 
-        nombreTv.setText(dataSnapshot.child("nombre").getValue(String.class));
-        emailTv.setText(dataSnapshot.child("email").getValue(String.class));
+        Log.d(TAG, "Usuario encontrado -> " + dataSnapshot.toString());
+        if (dataSnapshot.getValue() == null)
+        {
+            Constantes.showResultInDialog("", "El usuario solicitado no existe",
+                    MainActivity.this);
+        }
+        else
+        {
+            //Obtener contraseña
+            //Evaluar contraseña
+
+            //DataSnapshot { key = usuarios, value = {1={pass=abcdefg, nombre=Marco
+            // Antonio, email=marcoAntonio@gmail.com}} }
+
+            DataSnapshot userObject = dataSnapshot.getChildren().iterator().next();
+            User mUser = userObject.getValue(User.class);
+
+            //Mostrar nombre obtenidoasd
+            nombreTv.setText(mUser.getNombre());
+        }
     }
 
     private boolean isLogedIn()
