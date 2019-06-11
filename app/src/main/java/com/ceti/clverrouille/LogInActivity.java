@@ -1,6 +1,7 @@
 package com.ceti.clverrouille;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -34,6 +35,13 @@ public class LogInActivity extends AppCompatActivity
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_log_in);
+
+        //Evaluar si la sesión esta iniciada
+        if (isLogedIn())
+        {
+            Intent intent = new Intent(this, MainActivity.class);
+            startActivity(intent);
+        }
 
         //Inicializar Views
         initViews();
@@ -132,13 +140,21 @@ public class LogInActivity extends AppCompatActivity
                     //DataSnapshot { key = usuarios, value = {1={pass=abcdefg, nombre=Marco
                     // Antonio, email=marcoAntonio@gmail.com}} }
 
-                    User mUser = dataSnapshot.getChildren().iterator().next().getValue(User.class);
+                    DataSnapshot userObject = dataSnapshot.getChildren().iterator().next();
+                    User mUser = userObject.getValue(User.class);
 
-                    String gottenPass = pass.getText().toString();
-                    if (mUser.getPass().equals(gottenPass))
+                    if (mUser.getPass().equals(password))
                     {
-                        Constantes.showResultInDialog("Iniciar sesión", "Autenticao'",
-                                LogInActivity.this);
+                        //Almacenar id
+                        String uid = userObject.getKey();
+                        saveUserId(uid);
+
+                        //Pasar a la actividad principal
+                        Intent intent = new Intent(LogInActivity.this, MainActivity.class);
+                        startActivity(intent);
+
+                        //Definir animación
+                        overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
                     }
                     else
                     {
@@ -154,5 +170,24 @@ public class LogInActivity extends AppCompatActivity
                 Log.d(TAG, "Ocurrió un error, intenté de nuevo");
             }
         });
+    }
+
+    private void saveUserId(String id)
+    {
+        SharedPreferences.Editor spEditor = getSharedPreferences(Constantes.SHARED_PREFERENCES_NAME,
+                MODE_PRIVATE).edit();
+
+        spEditor.putString(Constantes.USER_ID, id);
+        spEditor.apply();
+    }
+
+    private boolean isLogedIn()
+    {
+        //Obtener sharedPreferences
+        SharedPreferences sharedPreferences =
+                getSharedPreferences(Constantes.SHARED_PREFERENCES_NAME, MODE_PRIVATE);
+
+        //Evaluar si existe el elemento "UserID"
+        return sharedPreferences.contains(Constantes.USER_ID);
     }
 }

@@ -6,6 +6,9 @@ import android.content.DialogInterface;
 
 public class Constantes
 {
+    public static final String USER_ID = "user_id";
+    public static final String SHARED_PREFERENCES_NAME = "shared_preferences";
+
     public static void showResultInDialog(String title, String message, Activity activity)
     {
         AlertDialog.Builder builder = new AlertDialog.Builder(activity);
