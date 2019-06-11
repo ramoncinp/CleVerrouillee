@@ -36,13 +36,6 @@ public class LogInActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_log_in);
 
-        //Evaluar si la sesión esta iniciada
-        if (isLogedIn())
-        {
-            Intent intent = new Intent(this, MainActivity.class);
-            startActivity(intent);
-        }
-
         //Inicializar Views
         initViews();
     }
@@ -179,15 +172,5 @@ public class LogInActivity extends AppCompatActivity
 
         spEditor.putString(Constantes.USER_ID, id);
         spEditor.apply();
-    }
-
-    private boolean isLogedIn()
-    {
-        //Obtener sharedPreferences
-        SharedPreferences sharedPreferences =
-                getSharedPreferences(Constantes.SHARED_PREFERENCES_NAME, MODE_PRIVATE);
-
-        //Evaluar si existe el elemento "UserID"
-        return sharedPreferences.contains(Constantes.USER_ID);
     }
 }
