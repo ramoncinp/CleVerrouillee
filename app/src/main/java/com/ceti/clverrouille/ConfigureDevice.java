@@ -251,9 +251,13 @@ public class ConfigureDevice extends AppCompatActivity
                     JSONObject requestBody = new JSONObject();
                     try
                     {
-                        requestBody.put("ssid", wifiNetworkSsid.getText().toString());
-                        requestBody.put("pass", wifiNetworkPassword.getText().toString());
+                        requestBody.put("key", "config_wifi");
                         requestBody.put("llave", wifiDeviceKey.getText().toString());
+
+                        JSONObject data = new JSONObject();
+                        data.put("ssid", wifiNetworkSsid.getText().toString());
+                        data.put("pass", wifiNetworkPassword.getText().toString());
+                        requestBody.put("data", data);
 
                         sendConfig(requestBody);
                     }
@@ -279,17 +283,49 @@ public class ConfigureDevice extends AppCompatActivity
                     public void onResponse(String response)
                     {
                         Log.d(TAG, "Respuesta -> " + response);
+                        String resultMessage;
 
-                        //Cerrar diálogo
-                        configDeviceDialog.dismiss();
+                        try
+                        {
+                            //Evaluar respuesta
+                            JSONObject jsonResponse = new JSONObject(response);
+
+                            //Evaluar response
+                            String responseVal = jsonResponse.getString("response");
+                            if (responseVal.equals("ok"))
+                            {
+                                resultMessage = "Dispositivo configurado \" " +
+                                        "+\n\"correctamente\\nSe reiniciará para aplicar los " +
+                                        "cambios\"";
+
+                                //Cerrar diálogo
+                                configDeviceDialog.dismiss();
+                            }
+                            else
+                            {
+                                resultMessage = "Error de autenticación";
+                            }
+                        }
+                        catch (JSONException e)
+                        {
+                            e.printStackTrace();
+                            resultMessage = "Error al procesar respuesta";
+                        }
 
                         //Mostrar resultado
-                        Toast.makeText(ConfigureDevice.this, "Dispositivo configurado " +
-                                        "correctamente\nSe reiniciará para aplicar los cambios",
+                        Toast.makeText(ConfigureDevice.this, resultMessage,
                                 Toast.LENGTH_SHORT).show();
 
-                        //Salir de la actividad
-                        finish();
+                        if (!configDeviceDialog.isShowing())
+                        {
+                            //Salir de la actividad
+                            finish();
+                        }
+                        else
+                        {
+                            //Dar oportunidad a que ingrese la llave correcta
+                            showContentInDialog();
+                        }
                     }
                 }
         );
@@ -304,6 +340,15 @@ public class ConfigureDevice extends AppCompatActivity
 
         LinearLayout linearLayout = configDeviceDialog.findViewById(R.id.dialog_content);
         linearLayout.setVisibility(View.GONE);
+    }
+
+    private void showContentInDialog()
+    {
+        ProgressBar progressBar = configDeviceDialog.findViewById(R.id.wifi_device_save_progress);
+        progressBar.setVisibility(View.GONE);
+
+        LinearLayout linearLayout = configDeviceDialog.findViewById(R.id.dialog_content);
+        linearLayout.setVisibility(View.VISIBLE);
     }
 
     private class WiFiDevicesComparator implements Comparator<WifiDevice>

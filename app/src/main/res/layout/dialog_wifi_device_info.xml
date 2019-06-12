@@ -48,7 +48,7 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="8dp"
             android:hint="Contraseña"
-            android:inputType="text"
+            android:inputType="textPassword"
             android:textSize="16sp"
             app:met_floatingLabel="normal"
             app:met_floatingLabelText="Contraseña" />
@@ -59,7 +59,7 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="8dp"
             android:hint="Llave"
-            android:inputType="text"
+            android:inputType="textPassword"
             android:textSize="16sp"
             app:met_floatingLabel="normal"
             app:met_floatingLabelText="Llave" />
