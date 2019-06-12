@@ -2,6 +2,7 @@ package com.ceti.clverrouille;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
@@ -11,10 +12,15 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.rengwuxian.materialedittext.MaterialEditText;
+import com.rengwuxian.materialedittext.validation.METValidator;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -195,9 +201,9 @@ public class ConfigureDevice extends AppCompatActivity
         LayoutInflater inflater = getLayoutInflater();
         View content = inflater.inflate(R.layout.dialog_wifi_device_info, null);
 
-        MaterialEditText wifiNetworkSsid = content.findViewById(R.id.wifi_device_network_ssid);
-        MaterialEditText wifiNetworkPassword = content.findViewById(R.id.wifi_device_network_pass);
-        MaterialEditText wifiDeviceKey = content.findViewById(R.id.wifi_device_key);
+        final MaterialEditText wifiNetworkSsid = content.findViewById(R.id.wifi_device_network_ssid);
+        final MaterialEditText wifiNetworkPassword = content.findViewById(R.id.wifi_device_network_pass);
+        final MaterialEditText wifiDeviceKey = content.findViewById(R.id.wifi_device_key);
 
         Button saveConfig = content.findViewById(R.id.wifi_device_dialog_submit);
 
@@ -213,9 +219,50 @@ public class ConfigureDevice extends AppCompatActivity
             @Override
             public void onClick(View v)
             {
-                configDeviceDialog.dismiss();
+                //Validar
+                METValidator emptyValidator = new METValidator("Campo obligatorio")
+                {
+                    @Override
+                    public boolean isValid(@NonNull CharSequence text, boolean isEmpty)
+                    {
+                        return !isEmpty;
+                    }
+                };
+
+                boolean isValid;
+
+                isValid = wifiNetworkSsid.validateWith(emptyValidator);
+                isValid &= wifiNetworkPassword.validateWith(emptyValidator);
+                isValid &= wifiDeviceKey.validateWith(emptyValidator);
+
+                if (isValid)
+                {
+                    showProgressBarInDialog();
+
+                    //Obtener datos en JSON
+                    JSONObject requestBody = new JSONObject();
+                    try
+                    {
+                        requestBody.put("ssid", wifiNetworkSsid.getText().toString());
+                        requestBody.put("pass", wifiNetworkPassword.getText().toString());
+                        requestBody.put("llave", wifiDeviceKey.getText().toString());
+                    }
+                    catch (JSONException e)
+                    {
+                        e.printStackTrace();
+                    }
+                }
             }
         });
+    }
+
+    private void showProgressBarInDialog()
+    {
+        ProgressBar progressBar = configDeviceDialog.findViewById(R.id.wifi_device_save_progress);
+        progressBar.setVisibility(View.VISIBLE);
+
+        LinearLayout linearLayout = configDeviceDialog.findViewById(R.id.dialog_content);
+        linearLayout.setVisibility(View.GONE);
     }
 
     private class WiFiDevicesComparator implements Comparator<WifiDevice>

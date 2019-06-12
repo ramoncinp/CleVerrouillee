@@ -14,7 +14,7 @@
         <ImageView
             android:id="@+id/wifi_device_wifi_icon"
             android:layout_width="0dp"
-            android:layout_height="64dp"
+            android:layout_height="56dp"
             android:layout_weight="1"
             android:layout_gravity="center_vertical"
             android:src="@drawable/ic_wifi_blue" />
@@ -33,7 +33,7 @@
                 android:text=""
                 android:textAlignment="textStart"
                 android:textColor="@android:color/black"
-                android:textSize="24sp" />
+                android:textSize="16sp" />
 
             <TextView
                 android:id="@+id/wifi_device_ap_name"
