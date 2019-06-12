@@ -15,6 +15,7 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.rengwuxian.materialedittext.MaterialEditText;
 import com.rengwuxian.materialedittext.validation.METValidator;
@@ -33,6 +34,9 @@ import java.util.Comparator;
 public class ConfigureDevice extends AppCompatActivity
 {
     private static final String TAG = ConfigureDevice.class.getSimpleName();
+
+    //Variables
+    private String deviceIP;
 
     //Views
     private Dialog configDeviceDialog;
@@ -176,6 +180,8 @@ public class ConfigureDevice extends AppCompatActivity
             public void onClick(View view)
             {
                 accessWiFiDeviceDialog();
+                deviceIP =
+                        wifiDevices.get(recyclerView.getChildAdapterPosition(view)).getCurrentIp();
             }
         });
 
@@ -201,8 +207,10 @@ public class ConfigureDevice extends AppCompatActivity
         LayoutInflater inflater = getLayoutInflater();
         View content = inflater.inflate(R.layout.dialog_wifi_device_info, null);
 
-        final MaterialEditText wifiNetworkSsid = content.findViewById(R.id.wifi_device_network_ssid);
-        final MaterialEditText wifiNetworkPassword = content.findViewById(R.id.wifi_device_network_pass);
+        final MaterialEditText wifiNetworkSsid =
+                content.findViewById(R.id.wifi_device_network_ssid);
+        final MaterialEditText wifiNetworkPassword =
+                content.findViewById(R.id.wifi_device_network_pass);
         final MaterialEditText wifiDeviceKey = content.findViewById(R.id.wifi_device_key);
 
         Button saveConfig = content.findViewById(R.id.wifi_device_dialog_submit);
@@ -246,14 +254,47 @@ public class ConfigureDevice extends AppCompatActivity
                         requestBody.put("ssid", wifiNetworkSsid.getText().toString());
                         requestBody.put("pass", wifiNetworkPassword.getText().toString());
                         requestBody.put("llave", wifiDeviceKey.getText().toString());
+
+                        sendConfig(requestBody);
                     }
                     catch (JSONException e)
                     {
                         e.printStackTrace();
+                        Toast.makeText(ConfigureDevice.this, "Error al procesar la informacion",
+                                Toast.LENGTH_SHORT).show();
                     }
                 }
             }
         });
+    }
+
+    private void sendConfig(JSONObject request)
+    {
+        UDPClient udpClient = new UDPClient(
+                deviceIP,
+                request.toString(),
+                new UDPClient.MessageListener()
+                {
+                    @Override
+                    public void onResponse(String response)
+                    {
+                        Log.d(TAG, "Respuesta -> " + response);
+
+                        //Cerrar diálogo
+                        configDeviceDialog.dismiss();
+
+                        //Mostrar resultado
+                        Toast.makeText(ConfigureDevice.this, "Dispositivo configurado " +
+                                        "correctamente\nSe reiniciará para aplicar los cambios",
+                                Toast.LENGTH_SHORT).show();
+
+                        //Salir de la actividad
+                        finish();
+                    }
+                }
+        );
+
+        udpClient.execute("");
     }
 
     private void showProgressBarInDialog()
