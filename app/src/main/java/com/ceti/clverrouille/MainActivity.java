@@ -30,23 +30,38 @@ import com.google.firebase.database.ValueEventListener;
 import com.rengwuxian.materialedittext.MaterialEditText;
 import com.rengwuxian.materialedittext.validation.METValidator;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity
 {
     private static final int LOG_IN_REQUEST_CODE = 0;
+    private static final int EDIT_DEVICE = 1;
+    private static final int UNLOCK_DEVICE = 2;
+
     private static final String TAG = MainActivity.class.getSimpleName();
 
     //Variables
+    private int deviceOperation;
+    private String llaveIngresada;
     private String userId;
 
     //Views
+    private Dialog optionsDialog;
     private FloatingActionButton fab;
     private RecyclerView devicesList;
     private TextView noDevices;
 
     //Objetos
+    private ArrayList<WifiDevice> wifiDevices = new ArrayList<>();
     private FirebaseDatabase root;
+    private WifiDevice selectedDevice;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -201,7 +216,7 @@ public class MainActivity extends AppCompatActivity
             }
              */
 
-            ArrayList<WifiDevice> wifiDevices = new ArrayList<>();
+            wifiDevices = new ArrayList<>();
 
             for (DataSnapshot snapshot : dataSnapshot.getChildren())
             {
@@ -215,6 +230,7 @@ public class MainActivity extends AppCompatActivity
                 @Override
                 public void onClick(View v)
                 {
+                    selectedDevice = wifiDevices.get(devicesList.getChildAdapterPosition(v));
                     showDeviceOptionDialog();
                 }
             });
@@ -304,7 +320,12 @@ public class MainActivity extends AppCompatActivity
             {
                 if (llave.validateWith(validator))
                 {
+                    llaveIngresada = llave.getText().toString();
+
                     //Enviar request
+                    deviceOperation = UNLOCK_DEVICE;
+                    searchAndSendRequest();
+                    optionsDialog.dismiss();
                 }
             }
         });
@@ -316,7 +337,12 @@ public class MainActivity extends AppCompatActivity
             {
                 if (llave.validateWith(validator))
                 {
+                    llaveIngresada = llave.getText().toString();
+
                     //Enviar request
+                    deviceOperation = EDIT_DEVICE;
+                    searchAndSendRequest();
+                    optionsDialog.dismiss();
                 }
             }
         });
@@ -324,8 +350,246 @@ public class MainActivity extends AppCompatActivity
         AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
         dialogBuilder.setView(content);
 
-        Dialog dialog = dialogBuilder.create();
-        dialog.setCancelable(true);
-        dialog.show();
+        optionsDialog = dialogBuilder.create();
+        optionsDialog.setCancelable(true);
+        optionsDialog.show();
+    }
+
+    private void searchAndSendRequest()
+    {
+        Toast.makeText(this, "Cargando...", Toast.LENGTH_SHORT).show();
+
+        Thread thread = new Thread(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                final String deviceIp = searchDevice();
+                runOnUiThread(new Runnable()
+                {
+                    @Override
+                    public void run()
+                    {
+                        if (!deviceIp.isEmpty())
+                        {
+                            sendConfig(deviceIp);
+                        }
+                        else
+                        {
+                            Toast.makeText(MainActivity.this, "Dispositivo no encontrado",
+                                    Toast.LENGTH_LONG).show();
+                        }
+                    }
+                });
+            }
+        });
+
+        thread.start();
+    }
+
+    private String searchDevice()
+    {
+        DatagramSocket c;
+        try
+        {
+            c = new DatagramSocket();
+            c.setBroadcast(true);
+
+            byte[] sendData = "EVERYTHING IS COPACETIC".getBytes();
+
+            try
+            {
+                DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length,
+                        InetAddress.getByName("255.255.255.255"), 2401);
+
+                c.send(sendPacket);
+            }
+            catch (Exception e)
+            {
+                e.printStackTrace();
+            }
+
+            //Obtener respuestas de los dispositivos de la red
+            while (true)
+            {
+                try
+                {
+                    byte[] recvBuf = new byte[256];
+                    DatagramPacket receivePacket = new DatagramPacket(recvBuf, recvBuf.length);
+                    c.setSoTimeout(1500);
+                    c.receive(receivePacket);
+
+                    //Si hubo respuesta y no hubo timeout, obtener datos del dispositivo
+                    String ipAdress = receivePacket.getAddress().getHostAddress();
+
+                    //Obtener mensaje de respuesta
+                    String message = new String(receivePacket.getData()).trim();
+
+                    //Loggear mensaje
+                    Log.d(TAG, "Message -> " + message);
+
+                    //Crear WiFiDevice
+                    if (selectedDevice.getApName().equals(message))
+                    {
+                        return ipAdress;
+                    }
+                }
+                catch (IOException e)
+                {
+                    break;
+                }
+            }
+
+            //Cerrar el puerto UDP
+            c.close();
+
+            return "";
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+
+        return "";
+    }
+
+    private void sendConfig(String ip)
+    {
+        JSONObject request = new JSONObject();
+
+        try
+        {
+            request.put("llave", llaveIngresada);
+            if (deviceOperation == UNLOCK_DEVICE)
+            {
+                request.put("key", "unlock");
+            }
+            else if (deviceOperation == EDIT_DEVICE)
+            {
+                request.put("key", "get_config");
+            }
+            else
+            {
+                return;
+            }
+        }
+        catch (JSONException e)
+        {
+            e.printStackTrace();
+            return;
+        }
+
+
+        UDPClient udpClient = new UDPClient(
+                ip,
+                request.toString(),
+                new UDPClient.MessageListener()
+                {
+                    @Override
+                    public void onResponse(String response)
+                    {
+                        Log.d(TAG, "Respuesta -> " + response);
+                        String resultMessage = "";
+
+                        try
+                        {
+                            //Evaluar respuesta
+                            JSONObject jsonResponse = new JSONObject(response);
+
+                            //Evaluar response
+                            String responseVal = jsonResponse.getString("response");
+                            if (responseVal.equals("ok"))
+                            {
+                                if (deviceOperation == UNLOCK_DEVICE)
+                                {
+                                    resultMessage = "Cerradura accionada";
+                                }
+                                else if (deviceOperation == EDIT_DEVICE)
+                                {
+                                    resultMessage = "Datos obtenidos";
+                                    showEditDeviceDialog(jsonResponse);
+                                }
+                            }
+                            else
+                            {
+                                resultMessage = "Error de autenticación";
+                            }
+                        }
+                        catch (JSONException e)
+                        {
+                            e.printStackTrace();
+                            resultMessage = "Error al procesar respuesta";
+                        }
+
+                        //Mostrar resultado
+                        Toast.makeText(MainActivity.this, resultMessage,
+                                Toast.LENGTH_SHORT).show();
+                    }
+                }
+        );
+
+        udpClient.execute("");
+    }
+
+    private void showEditDeviceDialog(JSONObject response)
+    {
+        LayoutInflater inflater = getLayoutInflater();
+        View content = inflater.inflate(R.layout.dialog_wifi_device_info_complete, null);
+
+        final MaterialEditText nombre = content.findViewById(R.id.wifi_device_name);
+        final MaterialEditText ssid = content.findViewById(R.id.wifi_device_network_ssid);
+        final MaterialEditText pass = content.findViewById(R.id.wifi_device_network_pass);
+        final MaterialEditText nfc = content.findViewById(R.id.wifi_device_nfc);
+        final MaterialEditText llave = content.findViewById(R.id.wifi_device_key);
+        Button submit = content.findViewById(R.id.wifi_device_dialog_submit);
+
+        final METValidator validator = new METValidator("Campo obligatorio")
+        {
+            @Override
+            public boolean isValid(@NonNull CharSequence text, boolean isEmpty)
+            {
+                return !isEmpty;
+            }
+        };
+
+        //Mostrar datos
+        try
+        {
+            JSONObject data = response.getJSONObject("data");
+            nombre.setText(selectedDevice.getDeviceName());
+            ssid.setText(data.getString("ssid"));
+            pass.setText(data.getString("pass"));
+            nfc.setText(data.getString("nfc"));
+            llave.setText(data.getString("llave"));
+        }
+        catch (JSONException e)
+        {
+            e.printStackTrace();
+        }
+
+        submit.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                boolean valid = nombre.validateWith(validator);
+                valid &= ssid.validateWith(validator);
+                valid &= pass.validateWith(validator);
+                valid &= llave.validateWith(validator);
+
+                if (valid)
+                {
+                    Toast.makeText(MainActivity.this, "Editando info...", Toast.LENGTH_SHORT).show();
+                    optionsDialog.dismiss();
+                }
+            }
+        });
+
+        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
+        dialogBuilder.setView(content);
+
+        optionsDialog = dialogBuilder.create();
+        optionsDialog.setCancelable(true);
+        optionsDialog.show();
     }
 }

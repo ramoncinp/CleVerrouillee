@@ -70,9 +70,6 @@ public class UDPClient extends AsyncTask<String, Void, String>
                     c.setSoTimeout(3000);
                     c.receive(receivePacket);
 
-                    //Si hubo respuesta y no hubo timeout, obtener datos del dispositivo
-                    String ipAdress = receivePacket.getAddress().getHostAddress();
-
                     //Obtener mensaje
                     responseMessage = new String(receivePacket.getData()).trim();
                     break;
