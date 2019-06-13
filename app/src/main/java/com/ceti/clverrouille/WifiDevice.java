@@ -6,9 +6,10 @@ public class WifiDevice
     private String apName = "";
     private String ssid = "";
     private String pass = "";
-    private String host = "";
-    private String port = "";
     private String currentIp = "";
+    private String llave = "";
+    private String nfc = "";
+    private String userId = "";
 
     public WifiDevice()
     {
@@ -45,26 +46,6 @@ public class WifiDevice
         this.pass = pass;
     }
 
-    public String getHost()
-    {
-        return host;
-    }
-
-    public void setHost(String host)
-    {
-        this.host = host;
-    }
-
-    public String getPort()
-    {
-        return port;
-    }
-
-    public void setPort(String port)
-    {
-        this.port = port;
-    }
-
     public String getCurrentIp()
     {
         return currentIp;
@@ -83,5 +64,35 @@ public class WifiDevice
     public void setApName(String apName)
     {
         this.apName = apName;
+    }
+
+    public String getLlave()
+    {
+        return llave;
+    }
+
+    public void setLlave(String llave)
+    {
+        this.llave = llave;
+    }
+
+    public String getNfc()
+    {
+        return nfc;
+    }
+
+    public void setNfc(String nfc)
+    {
+        this.nfc = nfc;
+    }
+
+    public String getUserId()
+    {
+        return userId;
+    }
+
+    public void setUserId(String userId)
+    {
+        this.userId = userId;
     }
 }

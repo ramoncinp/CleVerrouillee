@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:visibility="visible">
+
+    <ProgressBar
+        android:id="@+id/wifi_device_save_progress"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal|center_vertical"
+        android:layout_margin="32dp"
+        android:visibility="gone" />
+
+    <LinearLayout
+        android:id="@+id/dialog_content"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:visibility="visible">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:text="Agregar dispositivo"
+            android:textColor="@color/black"
+            android:textSize="16sp"
+            android:textStyle="italic" />
+
+        <com.rengwuxian.materialedittext.MaterialEditText
+            android:id="@+id/wifi_device_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:hint="Nombre"
+            android:inputType="text"
+            android:textSize="16sp"
+            app:met_floatingLabel="normal"
+            app:met_floatingLabelText="Nombre" />
+
+        <com.rengwuxian.materialedittext.MaterialEditText
+            android:id="@+id/wifi_device_key"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:hint="Llave"
+            android:inputType="textPassword"
+            android:textSize="16sp"
+            app:met_floatingLabel="normal"
+            app:met_floatingLabelText="Llave" />
+
+        <Button
+            android:id="@+id/wifi_device_dialog_submit"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:background="@drawable/round_corner_color_primary_button"
+            android:padding="16dp"
+            android:text="INGRESAR"
+            android:textColor="@android:color/white"
+            android:textSize="16sp"
+            android:visibility="visible" />
+
+    </LinearLayout>
+
+</LinearLayout>

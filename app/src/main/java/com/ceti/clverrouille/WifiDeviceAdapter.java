@@ -48,16 +48,9 @@ public class WifiDeviceAdapter extends RecyclerView.Adapter<WifiDeviceAdapter
     {
         WifiDevice wifiDevice = wifiDevices.get(position);
 
-        holder.ssid.setText(wifiDevice.getDeviceName());
+        holder.ssid.setText(wifiDevice.getApName());
         holder.ipAddress.setVisibility(View.VISIBLE);
         holder.ipAddress.setText(wifiDevice.getCurrentIp());
-
-        if (!wifiDevice.getApName().isEmpty())
-        {
-            holder.apName.setText(wifiDevice.getApName());
-            holder.apName.setVisibility(View.VISIBLE);
-        }
-
         holder.wifiIcon.setImageDrawable(ContextCompat.getDrawable(context, R.drawable
                 .ic_wifi_green));
     }
