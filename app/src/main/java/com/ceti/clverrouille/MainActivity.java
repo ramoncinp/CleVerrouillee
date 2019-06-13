@@ -7,6 +7,8 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -21,6 +23,8 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 
+import java.util.ArrayList;
+
 public class MainActivity extends AppCompatActivity
 {
     private static final int LOG_IN_REQUEST_CODE = 0;
@@ -31,6 +35,8 @@ public class MainActivity extends AppCompatActivity
 
     //Views
     private FloatingActionButton fab;
+    private RecyclerView devicesList;
+    private TextView noDevices;
 
     //Objetos
     private FirebaseDatabase root;
@@ -96,6 +102,8 @@ public class MainActivity extends AppCompatActivity
 
     private void initViews()
     {
+        noDevices = findViewById(R.id.no_found_devices_tv);
+        devicesList = findViewById(R.id.user_devices_list);
         fab = findViewById(R.id.add_device);
         fab.setOnClickListener(new View.OnClickListener()
         {
@@ -140,6 +148,80 @@ public class MainActivity extends AppCompatActivity
                 Toast.makeText(MainActivity.this, "Error al obtener usuario", Toast.LENGTH_SHORT).show();
             }
         });
+
+        //Obtener referencia de dispositivos
+        DatabaseReference devices = root.getReference("dispositivos");
+        devices.addValueEventListener(new ValueEventListener()
+        {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot)
+            {
+                listUserDevices(dataSnapshot);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError)
+            {
+                Log.d("UserDevices", databaseError.toString());
+                devicesList.setVisibility(View.GONE);
+                noDevices.setVisibility(View.VISIBLE);
+            }
+        });
+    }
+
+    private void listUserDevices(DataSnapshot dataSnapshot)
+    {
+        Log.d("UserDevices", dataSnapshot.toString());
+        if (dataSnapshot.getValue() != null)
+        {
+            //Obtener contraseña
+            //Evaluar contraseña
+
+            /*
+            {
+                key = dispositivos,
+                value = {
+                    -LhH6fF8Ki2ymMFg_q1l={
+                        currentIp=192.168.0.204,
+                        llave=2803269,
+                        pass=B1n4r1uM,
+                        nfc=,
+                        deviceName=Casa,
+                        ssid=AP_OFICINA,
+                        userId=-Lh0mYAFIF67B5oymvkg,
+                        apName=LOCK_2803269}
+                }
+            }
+             */
+
+            ArrayList<WifiDevice> wifiDevices = new ArrayList<>();
+
+            for (DataSnapshot snapshot : dataSnapshot.getChildren())
+            {
+                WifiDevice wifiDevice = snapshot.getValue(WifiDevice.class);
+                wifiDevices.add(wifiDevice);
+            }
+
+            LocksAdapter locksAdapter = new LocksAdapter(wifiDevices);
+            locksAdapter.setOnClickListener(new View.OnClickListener()
+            {
+                @Override
+                public void onClick(View v)
+                {
+                    Toast.makeText(MainActivity.this, "Abriendo puerta", Toast.LENGTH_SHORT).show();
+                }
+            });
+
+            devicesList.setAdapter(locksAdapter);
+            devicesList.setLayoutManager(new LinearLayoutManager(this));
+            devicesList.setVisibility(View.VISIBLE);
+            noDevices.setVisibility(View.INVISIBLE);
+        }
+        else
+        {
+            devicesList.setVisibility(View.GONE);
+            noDevices.setVisibility(View.VISIBLE);
+        }
     }
 
     private void parseData(DataSnapshot dataSnapshot)

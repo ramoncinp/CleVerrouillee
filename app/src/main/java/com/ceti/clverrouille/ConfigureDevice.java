@@ -530,6 +530,7 @@ public class ConfigureDevice extends AppCompatActivity
                 Toast.makeText(ConfigureDevice.this, "Dispositivo agregado correctamente",
                         Toast.LENGTH_LONG).show();
                 configDeviceDialog.dismiss();
+                finish();
             }
         }).addOnFailureListener(new OnFailureListener()
         {

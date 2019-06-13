@@ -85,6 +85,7 @@
                 android:textStyle="bold" />
 
             <TextView
+                android:id="@+id/no_found_devices_tv"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@id/locks_title"
@@ -94,7 +95,14 @@
                 android:textAlignment="center"
                 android:textColor="@android:color/black"
                 android:textSize="16sp"
+                android:visibility="invisible"
                 android:textStyle="italic" />
+
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/user_devices_list"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/locks_title" />
 
         </RelativeLayout>
 
