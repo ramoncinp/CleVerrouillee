@@ -1,5 +1,7 @@
 package com.ceti.clverrouille;
 
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
@@ -7,12 +9,15 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -22,6 +27,8 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
+import com.rengwuxian.materialedittext.MaterialEditText;
+import com.rengwuxian.materialedittext.validation.METValidator;
 
 import java.util.ArrayList;
 
@@ -208,7 +215,7 @@ public class MainActivity extends AppCompatActivity
                 @Override
                 public void onClick(View v)
                 {
-                    Toast.makeText(MainActivity.this, "Abriendo puerta", Toast.LENGTH_SHORT).show();
+                    showDeviceOptionDialog();
                 }
             });
 
@@ -270,5 +277,55 @@ public class MainActivity extends AppCompatActivity
 
         //Reiniciar actividad
         this.recreate();
+    }
+
+    private void showDeviceOptionDialog()
+    {
+        LayoutInflater inflater = getLayoutInflater();
+        View content = inflater.inflate(R.layout.selected_device_option_dialog, null);
+
+        final MaterialEditText llave = content.findViewById(R.id.llave);
+        CardView unlock = content.findViewById(R.id.unlock);
+        CardView edit = content.findViewById(R.id.edit_lock);
+
+        final METValidator validator = new METValidator("Campo obligatorio")
+        {
+            @Override
+            public boolean isValid(@NonNull CharSequence text, boolean isEmpty)
+            {
+                return !isEmpty;
+            }
+        };
+
+        unlock.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                if (llave.validateWith(validator))
+                {
+                    //Enviar request
+                }
+            }
+        });
+
+        edit.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                if (llave.validateWith(validator))
+                {
+                    //Enviar request
+                }
+            }
+        });
+
+        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
+        dialogBuilder.setView(content);
+
+        Dialog dialog = dialogBuilder.create();
+        dialog.setCancelable(true);
+        dialog.show();
     }
 }
