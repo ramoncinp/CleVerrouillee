@@ -87,7 +87,7 @@ public class ShowRegistersActivity extends AppCompatActivity
                     register.setState(state);
                     register.setImagePath(file.getAbsolutePath());
 
-                    registers.add(register);
+                    registers.add(0, register);
                 }
             }
 
