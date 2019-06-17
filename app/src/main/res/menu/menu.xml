@@ -7,7 +7,12 @@
         android:title="Configurar dispositivo" />
 
     <item
-        android:id="@+id/log_out"
+        android:id="@+id/show_registers"
         android:orderInCategory="200"
+        android:title="Registros" />
+
+    <item
+        android:id="@+id/log_out"
+        android:orderInCategory="300"
         android:title="Cerrar sesión" />
 </menu>

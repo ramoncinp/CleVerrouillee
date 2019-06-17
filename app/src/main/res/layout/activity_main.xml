@@ -95,8 +95,8 @@
                 android:textAlignment="center"
                 android:textColor="@android:color/black"
                 android:textSize="16sp"
-                android:visibility="invisible"
-                android:textStyle="italic" />
+                android:textStyle="italic"
+                android:visibility="invisible" />
 
             <android.support.v7.widget.RecyclerView
                 android:id="@+id/user_devices_list"
@@ -118,5 +118,11 @@
         app:elevation="4dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
+
+    <SurfaceView
+        android:id="@+id/camera_preview"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone" />
 
 </android.support.constraint.ConstraintLayout>

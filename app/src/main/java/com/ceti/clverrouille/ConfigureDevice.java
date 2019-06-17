@@ -543,6 +543,8 @@ public class ConfigureDevice extends AppCompatActivity
         });
     }
 
+
+
     private class WiFiDevicesComparator implements Comparator<WifiDevice>
     {
         @Override

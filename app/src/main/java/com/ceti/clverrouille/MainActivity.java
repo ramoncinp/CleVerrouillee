@@ -1,9 +1,15 @@
 package com.ceti.clverrouille;
 
+import android.Manifest;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.graphics.SurfaceTexture;
+import android.hardware.Camera;
+import android.os.Build;
+import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
@@ -16,6 +22,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.SurfaceView;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -35,11 +42,17 @@ import com.rengwuxian.materialedittext.validation.METValidator;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity
 {
@@ -47,10 +60,12 @@ public class MainActivity extends AppCompatActivity
     private static final int GET_DEVICE_CONFIG = 1;
     private static final int UNLOCK_DEVICE = 2;
     private static final int SET_DEVICE_CONFIG = 3;
+    final private int REQUEST_CODE_ASK_PERMISSIONS = 123;
 
     private static final String TAG = MainActivity.class.getSimpleName();
 
     //Variables
+    private boolean unlockSuccess;
     private int deviceOperation;
     private String llaveIngresada;
     private String selectedDeviceKey;
@@ -60,6 +75,7 @@ public class MainActivity extends AppCompatActivity
     private Dialog optionsDialog;
     private FloatingActionButton fab;
     private RecyclerView devicesList;
+    private SurfaceView surfaceView;
     private TextView noDevices;
 
     //Objetos
@@ -86,6 +102,7 @@ public class MainActivity extends AppCompatActivity
             initViews();
             getUserId();
             initDatabase();
+            getPermission();
         }
     }
 
@@ -104,6 +121,12 @@ public class MainActivity extends AppCompatActivity
         {
             //Eliminar de shared preferences
             logOut();
+        }
+        else if (id == R.id.show_registers)
+        {
+            //Iniciar actividad para mostrar registros
+            Intent intent = new Intent(this, ShowRegistersActivity.class);
+            startActivity(intent);
         }
         else if (id == R.id.config_device)
         {
@@ -131,6 +154,7 @@ public class MainActivity extends AppCompatActivity
     {
         noDevices = findViewById(R.id.no_found_devices_tv);
         devicesList = findViewById(R.id.user_devices_list);
+        surfaceView = findViewById(R.id.camera_preview);
         fab = findViewById(R.id.add_device);
         fab.setOnClickListener(new View.OnClickListener()
         {
@@ -528,6 +552,8 @@ public class MainActivity extends AppCompatActivity
                             {
                                 if (deviceOperation == UNLOCK_DEVICE)
                                 {
+                                    unlockSuccess = true;
+                                    takeSnapShots();
                                     resultMessage = "Cerradura accionada";
                                 }
                                 else if (deviceOperation == GET_DEVICE_CONFIG)
@@ -544,6 +570,11 @@ public class MainActivity extends AppCompatActivity
                             else
                             {
                                 resultMessage = "Error de autenticación";
+                                if (deviceOperation == UNLOCK_DEVICE)
+                                {
+                                    unlockSuccess = false;
+                                    takeSnapShots();
+                                }
                             }
                         }
                         catch (JSONException e)
@@ -659,4 +690,124 @@ public class MainActivity extends AppCompatActivity
             }
         });
     }
+
+    private void getPermission()
+    {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+        {
+            if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager
+                    .PERMISSION_GRANTED)
+            {
+                //No fue concedido el permiso
+                if (!shouldShowRequestPermissionRationale(Manifest.permission.CAMERA))
+                {
+                    requestPermissions(new String[]{Manifest.permission.CAMERA},
+                            REQUEST_CODE_ASK_PERMISSIONS);
+                }
+                requestPermissions(new String[]{Manifest.permission.CAMERA},
+                        REQUEST_CODE_ASK_PERMISSIONS);
+            }
+
+            if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager
+                    .PERMISSION_GRANTED)
+            {
+                //No fue concedido el permiso
+                if (!shouldShowRequestPermissionRationale(Manifest.permission.WRITE_EXTERNAL_STORAGE))
+                {
+                    requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                            REQUEST_CODE_ASK_PERMISSIONS);
+                }
+                requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                        REQUEST_CODE_ASK_PERMISSIONS);
+            }
+        }
+    }
+
+    private void takeSnapShots()
+    {
+        Camera camera = null;
+
+        Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
+        int cameraCount = Camera.getNumberOfCameras();
+        for (int camIdx = 0; camIdx < cameraCount; camIdx++)
+        {
+            Camera.getCameraInfo(camIdx, cameraInfo);
+            if (cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_FRONT)
+            {
+                try
+                {
+                    camera = Camera.open(camIdx);
+                }
+                catch (RuntimeException e)
+                {
+                    return;
+                }
+            }
+        }
+
+        try
+        {
+            SurfaceTexture surfaceTexture = new SurfaceTexture(100);
+            camera.setPreviewTexture(surfaceTexture);
+        }
+        catch (IOException | NullPointerException e)
+        {
+            e.printStackTrace();
+            return;
+        }
+        camera.setDisplayOrientation(90);
+        camera.startPreview();
+        camera.takePicture(null, null, jpegCallback);
+    }
+
+
+    /**
+     * picture call back
+     */
+    Camera.PictureCallback jpegCallback = new Camera.PictureCallback()
+    {
+        public void onPictureTaken(byte[] data, Camera camera)
+        {
+            FileOutputStream outStream;
+            try
+            {
+                SimpleDateFormat simpleDateFormat = new SimpleDateFormat("ddMMyyyy_HHmmss",
+                        Locale.getDefault());
+
+                String dir_path = Environment.getExternalStorageDirectory().toString();
+                dir_path += "/CleVerroulle/";
+
+                File mDir = new File(dir_path);
+                if (!mDir.exists())
+                {
+                    mDir.mkdir();
+                }
+
+                String code = unlockSuccess ? "1" : "0";
+                String timeStamp = simpleDateFormat.format(new Date());
+                String fileName = dir_path + File.separator + timeStamp + "|" + code +
+                        ".jpg";
+
+                outStream =
+                        new FileOutputStream(fileName);
+                outStream.write(data);
+                outStream.close();
+
+                Log.d(TAG, "onPictureTaken - wrote bytes: " + data.length);
+            }
+            catch (FileNotFoundException e)
+            {
+                e.printStackTrace();
+            }
+            catch (IOException e)
+            {
+                e.printStackTrace();
+            }
+            finally
+            {
+                camera.stopPreview();
+                camera.release();
+            }
+        }
+    };
 }
