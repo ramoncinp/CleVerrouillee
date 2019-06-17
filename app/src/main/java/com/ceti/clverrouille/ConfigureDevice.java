@@ -419,9 +419,7 @@ public class ConfigureDevice extends AppCompatActivity
                             {
                                 if (op == CONFIGURE_WIFI)
                                 {
-                                    resultMessage = "Dispositivo configurado \" " +
-                                            "+\n\"correctamente\\nSe reiniciará para aplicar los " +
-                                            "cambios\"";
+                                    resultMessage = jsonResponse.getString("message");
 
                                     //Cerrar diálogo
                                     configDeviceDialog.dismiss();
@@ -517,7 +515,8 @@ public class ConfigureDevice extends AppCompatActivity
     private void addDeviceToFirebase()
     {
         //Obtener id de usuario
-        SharedPreferences sharedPreferences = getSharedPreferences(Constantes.SHARED_PREFERENCES_NAME, MODE_PRIVATE);
+        SharedPreferences sharedPreferences =
+                getSharedPreferences(Constantes.SHARED_PREFERENCES_NAME, MODE_PRIVATE);
         String userId = sharedPreferences.getString(Constantes.USER_ID, "");
         selectedWiFiDevice.setUserId(userId);
 

@@ -21,6 +21,8 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -42,14 +44,16 @@ import java.util.ArrayList;
 public class MainActivity extends AppCompatActivity
 {
     private static final int LOG_IN_REQUEST_CODE = 0;
-    private static final int EDIT_DEVICE = 1;
+    private static final int GET_DEVICE_CONFIG = 1;
     private static final int UNLOCK_DEVICE = 2;
+    private static final int SET_DEVICE_CONFIG = 3;
 
     private static final String TAG = MainActivity.class.getSimpleName();
 
     //Variables
     private int deviceOperation;
     private String llaveIngresada;
+    private String selectedDeviceKey;
     private String userId;
 
     //Views
@@ -60,6 +64,7 @@ public class MainActivity extends AppCompatActivity
 
     //Objetos
     private ArrayList<WifiDevice> wifiDevices = new ArrayList<>();
+    private ArrayList<String> wifiDevicesKeys = new ArrayList<>();
     private FirebaseDatabase root;
     private WifiDevice selectedDevice;
 
@@ -217,11 +222,13 @@ public class MainActivity extends AppCompatActivity
              */
 
             wifiDevices = new ArrayList<>();
+            wifiDevicesKeys = new ArrayList<>();
 
             for (DataSnapshot snapshot : dataSnapshot.getChildren())
             {
                 WifiDevice wifiDevice = snapshot.getValue(WifiDevice.class);
                 wifiDevices.add(wifiDevice);
+                wifiDevicesKeys.add(snapshot.getKey());
             }
 
             LocksAdapter locksAdapter = new LocksAdapter(wifiDevices);
@@ -230,7 +237,9 @@ public class MainActivity extends AppCompatActivity
                 @Override
                 public void onClick(View v)
                 {
-                    selectedDevice = wifiDevices.get(devicesList.getChildAdapterPosition(v));
+                    int position = devicesList.getChildAdapterPosition(v);
+                    selectedDevice = wifiDevices.get(position);
+                    selectedDeviceKey = wifiDevicesKeys.get(position);
                     showDeviceOptionDialog();
                 }
             });
@@ -340,7 +349,7 @@ public class MainActivity extends AppCompatActivity
                     llaveIngresada = llave.getText().toString();
 
                     //Enviar request
-                    deviceOperation = EDIT_DEVICE;
+                    deviceOperation = GET_DEVICE_CONFIG;
                     searchAndSendRequest();
                     optionsDialog.dismiss();
                 }
@@ -365,6 +374,7 @@ public class MainActivity extends AppCompatActivity
             public void run()
             {
                 final String deviceIp = searchDevice();
+
                 runOnUiThread(new Runnable()
                 {
                     @Override
@@ -372,6 +382,8 @@ public class MainActivity extends AppCompatActivity
                     {
                         if (!deviceIp.isEmpty())
                         {
+                            //Guardar ip en objeto
+                            selectedDevice.setCurrentIp(deviceIp);
                             sendConfig(deviceIp);
                         }
                         else
@@ -464,9 +476,23 @@ public class MainActivity extends AppCompatActivity
             {
                 request.put("key", "unlock");
             }
-            else if (deviceOperation == EDIT_DEVICE)
+            else if (deviceOperation == GET_DEVICE_CONFIG)
             {
                 request.put("key", "get_config");
+            }
+            else if (deviceOperation == SET_DEVICE_CONFIG)
+            {
+                request.put("key", "set_config");
+
+                //Crear objeto de datos
+                JSONObject data = new JSONObject();
+                data.put("ssid", selectedDevice.getSsid());
+                data.put("pass", selectedDevice.getPass());
+                data.put("nfc", selectedDevice.getNfc());
+                data.put("llave", selectedDevice.getLlave());
+
+                //Agregar datos
+                request.put("data", data);
             }
             else
             {
@@ -504,10 +530,15 @@ public class MainActivity extends AppCompatActivity
                                 {
                                     resultMessage = "Cerradura accionada";
                                 }
-                                else if (deviceOperation == EDIT_DEVICE)
+                                else if (deviceOperation == GET_DEVICE_CONFIG)
                                 {
                                     resultMessage = "Datos obtenidos";
                                     showEditDeviceDialog(jsonResponse);
+                                }
+                                else if (deviceOperation == SET_DEVICE_CONFIG)
+                                {
+                                    updateLockInFirebase();
+                                    return;
                                 }
                             }
                             else
@@ -579,6 +610,17 @@ public class MainActivity extends AppCompatActivity
 
                 if (valid)
                 {
+                    //Definir valores
+                    selectedDevice.setDeviceName(nombre.getText().toString());
+                    selectedDevice.setSsid(ssid.getText().toString());
+                    selectedDevice.setPass(pass.getText().toString());
+                    selectedDevice.setNfc(nfc.getText().toString());
+                    selectedDevice.setLlave(llave.getText().toString());
+
+                    //Actualizar datos
+                    deviceOperation = SET_DEVICE_CONFIG;
+                    sendConfig(selectedDevice.getCurrentIp());
+
                     Toast.makeText(MainActivity.this, "Editando info...", Toast.LENGTH_SHORT).show();
                     optionsDialog.dismiss();
                 }
@@ -591,5 +633,30 @@ public class MainActivity extends AppCompatActivity
         optionsDialog = dialogBuilder.create();
         optionsDialog.setCancelable(true);
         optionsDialog.show();
+    }
+
+    private void updateLockInFirebase()
+    {
+        //Obtener referencia de dispositivos
+        DatabaseReference mDevice = root.getReference("dispositivos").child(selectedDeviceKey);
+
+        //Obtener referencia de objeto
+        mDevice.setValue(selectedDevice).addOnSuccessListener(new OnSuccessListener<Void>()
+        {
+            @Override
+            public void onSuccess(Void aVoid)
+            {
+                Toast.makeText(MainActivity.this, "Datos actualizados correctamente",
+                        Toast.LENGTH_SHORT).show();
+            }
+        }).addOnFailureListener(new OnFailureListener()
+        {
+            @Override
+            public void onFailure(@NonNull Exception e)
+            {
+                Toast.makeText(MainActivity.this, "Error al actualizar los datos",
+                        Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 }
