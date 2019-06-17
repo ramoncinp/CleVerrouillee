@@ -425,6 +425,8 @@ public class MainActivity extends AppCompatActivity
 
     private String searchDevice()
     {
+        String ipAdress = "";
+
         DatagramSocket c;
         try
         {
@@ -439,6 +441,8 @@ public class MainActivity extends AppCompatActivity
                         InetAddress.getByName("255.255.255.255"), 2401);
 
                 c.send(sendPacket);
+                c.send(sendPacket);
+                c.send(sendPacket);
             }
             catch (Exception e)
             {
@@ -452,11 +456,11 @@ public class MainActivity extends AppCompatActivity
                 {
                     byte[] recvBuf = new byte[256];
                     DatagramPacket receivePacket = new DatagramPacket(recvBuf, recvBuf.length);
-                    c.setSoTimeout(1500);
+                    c.setSoTimeout(2000);
                     c.receive(receivePacket);
 
                     //Si hubo respuesta y no hubo timeout, obtener datos del dispositivo
-                    String ipAdress = receivePacket.getAddress().getHostAddress();
+                    ipAdress = receivePacket.getAddress().getHostAddress();
 
                     //Obtener mensaje de respuesta
                     String message = new String(receivePacket.getData()).trim();
@@ -467,7 +471,7 @@ public class MainActivity extends AppCompatActivity
                     //Crear WiFiDevice
                     if (selectedDevice.getApName().equals(message))
                     {
-                        return ipAdress;
+                        break;
                     }
                 }
                 catch (IOException e)
@@ -478,15 +482,13 @@ public class MainActivity extends AppCompatActivity
 
             //Cerrar el puerto UDP
             c.close();
-
-            return "";
+            return ipAdress;
         }
         catch (IOException e)
         {
             e.printStackTrace();
+            return "";
         }
-
-        return "";
     }
 
     private void sendConfig(String ip)

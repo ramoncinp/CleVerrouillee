@@ -8,6 +8,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.File;
@@ -60,6 +61,11 @@ public class ShowRegistersActivity extends AppCompatActivity
         {
             registers.clear();
 
+            if (mDir.listFiles() == null)
+            {
+                return;
+            }
+
             for (File file : mDir.listFiles())
             {
                 Register register = new Register();
@@ -108,6 +114,10 @@ public class ShowRegistersActivity extends AppCompatActivity
             });
             registersList.setAdapter(registersAdapter);
             registersList.setLayoutManager(new LinearLayoutManager(this));
+            registersList.setVisibility(View.VISIBLE);
+
+            TextView noRegisters = findViewById(R.id.no_registers);
+            noRegisters.setVisibility(View.GONE);
         }
     }
 

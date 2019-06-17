@@ -54,6 +54,8 @@ public class UDPClient extends AsyncTask<String, Void, String>
                         InetAddress.getByName(serverIp), 2401);
 
                 c.send(sendPacket);
+                c.send(sendPacket);
+                c.send(sendPacket);
             }
             catch (Exception e)
             {

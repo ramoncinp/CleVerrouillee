@@ -162,6 +162,8 @@ public class ConfigureDevice extends AppCompatActivity
                         InetAddress.getByName("255.255.255.255"), 2401);
 
                 c.send(sendPacket);
+                c.send(sendPacket);
+                c.send(sendPacket);
             }
             catch (Exception e)
             {
@@ -175,7 +177,7 @@ public class ConfigureDevice extends AppCompatActivity
                 {
                     byte[] recvBuf = new byte[256];
                     DatagramPacket receivePacket = new DatagramPacket(recvBuf, recvBuf.length);
-                    c.setSoTimeout(6000);
+                    c.setSoTimeout(3500);
                     c.receive(receivePacket);
 
                     //Si hubo respuesta y no hubo timeout, obtener datos del dispositivo
@@ -189,8 +191,22 @@ public class ConfigureDevice extends AppCompatActivity
                     wifiDevice.setApName(message);
                     wifiDevice.setCurrentIp(ipAdress);
 
-                    //Agregar dispositivo encontrado a la lista
-                    wifiDevices.add(wifiDevice);
+                    if (wifiDevices.size() != 0)
+                    {
+                        for (WifiDevice mWifiDevice : wifiDevices)
+                        {
+                            if (!ipAdress.equals(mWifiDevice.getCurrentIp()))
+                            {
+                                //Agregar dispositivo encontrado a la lista
+                                wifiDevices.add(wifiDevice);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        //Agregar dispositivo encontrado a la lista
+                        wifiDevices.add(wifiDevice);
+                    }
 
                     //Loggear mensaje
                     Log.d(TAG, "Message -> " + message);
@@ -542,8 +558,6 @@ public class ConfigureDevice extends AppCompatActivity
             }
         });
     }
-
-
 
     private class WiFiDevicesComparator implements Comparator<WifiDevice>
     {
