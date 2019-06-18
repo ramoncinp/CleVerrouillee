@@ -202,7 +202,8 @@ public class MainActivity extends AppCompatActivity
 
         //Obtener referencia de dispositivos
         DatabaseReference devices = root.getReference("dispositivos");
-        devices.addValueEventListener(new ValueEventListener()
+        Query getDevices = devices.orderByChild("userId").equalTo(userId);
+        getDevices.addListenerForSingleValueEvent(new ValueEventListener()
         {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot)
