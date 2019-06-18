@@ -144,6 +144,7 @@ public class LogInActivity extends AppCompatActivity
 
                         //Pasar a la actividad principal
                         Intent intent = new Intent(LogInActivity.this, MainActivity.class);
+                        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                         startActivity(intent);
 
                         //Definir animación
